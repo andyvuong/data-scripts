@@ -1,4 +1,13 @@
-#Job Search
+##Web-Data Tools
+==============
+These are a bunch of different web and data related projects I'm keeping in this repo. Expect to find things related to search, web scraping, and data visualization.
+
+##Scrapers
+==============
+Indeed Jobs - Scrapes the xml returned from Indeed.com's publisher API tool. 
+UIUC SVN - Scrapes some files from an svn repo just because.
+
+##Job Search
 ==============
 This project is a little different from the others. It began as a project for Boilermake 2014 (Purdue's Hackathon)
 but evolved into some I was doing so I could learn more about Elasticsearch. Being a Solr user in the past,
