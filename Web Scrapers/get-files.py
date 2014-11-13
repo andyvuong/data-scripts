@@ -19,50 +19,67 @@ import requests, urllib.request, urllib.parse, sys, re, os
 " @param path - The path to store downloaded files.
 """
 def getFiles(param_url, path):
-
     # Make an HTTP request to the given URL.
     response = urllib.request.urlopen(param_url)
-  
     # Extract and print response meta-data.
     header = response.info()
-    
     # Print the response to console.
     print("URL:",response.geturl())
     print("Status:", response.getcode())
     print(header)
-
     # Extract content.
     data = response.read()
     data_tree = etree.HTML(data)
-    
     # Extract all the anchors.
     data_tree_links = data_tree.xpath('//a/@href')
-
-    print(data_tree_links)
-    
-    # Set destination path.
-    dest_directory = os.path.join(path, "file.pdf")
-
     # Process all elements.
     data_processed = get_valid_files(data_tree_links)
 
     # Process all links.
     for n in range(0, len(data_processed)-1):
+        link = data_processed[n]
+        
         check = urllib.request.Request(data_processed[n])
         r = urllib.request.urlopen(check)
-        header = r.info()
-        # Check if a content-disposition exists and grab the file name.
-        if 'Content-Disposition' in header:
-            filename = header['Content-Disposition'].split('filename=')[1]
-            if filename[0] == '"' or filename[0] == "'":
-                filename = filename[1:-1]
-                print(filename)
-            elif r.url != check:
-                print(r.url)
+
+        link_header = r.info()
+        # Check for content-type in the header
+        if 'Content-Type' in link_header:
+            link_filetype = link_header.get_content_subtype() #email.message.Message
+            if should_download(link_filetype) == True:
+                download_file(link, link_header, path)
+        r.close()
                 
     response.close()
 
-    #urllib.request.urlretrieve("http://www.andyvuong.me/resources/avresume.pdf", dest_directory)
+"""
+" @param link - Where the file is coming from.
+" @param dest - Destination folder to download to.
+" @param header - link's response header.
+"""
+def download_file(link, link_header, dest):
+    name = ""
+    # Analysis the header to determine the file name
+    if 'Content-Disposition' in link_header:
+        name = link_header.get_filename()
+    else:
+        name = basename(urlsplit(link)[2])
+    directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), dest)
+    final_dest = os.path.join(directory, name)
+    print(final_dest)
+    # Download
+    urllib.request.urlretrieve(link, dest)
+
+"""
+" @param content_type - content type of file
+" @return true if the file should be downloaded
+"""
+def should_download(content_type):
+    acceptable = ['pdf'] # list of acceptable content types
+    for n in acceptable:
+        if n == content_type:
+            return True
+    return False
 
 """
 " @param array_data - An array of string elements.
