@@ -6,6 +6,7 @@
 " @author Andy Vuong
 "
 """
+# note to self: Make more "pythonic" later.
 
 from lxml import html
 from lxml import etree
@@ -36,17 +37,29 @@ def getFiles(param_url, path):
     
     # Extract all the anchors.
     data_tree_links = data_tree.xpath('//a/@href')
+
+    print(data_tree_links)
     
     # Set destination path.
     dest_directory = os.path.join(path, "file.pdf")
 
     # Process all elements.
-    data_processed = getValidFiles(data_tree_links)
+    data_processed = get_valid_files(data_tree_links)
 
     # Process all links.
-    
-
- 
+    for n in range(0, len(data_processed)-1):
+        check = urllib.request.Request(data_processed[n])
+        r = urllib.request.urlopen(check)
+        header = r.info()
+        # Check if a content-disposition exists and grab the file name.
+        if 'Content-Disposition' in header:
+            filename = header['Content-Disposition'].split('filename=')[1]
+            if filename[0] == '"' or filename[0] == "'":
+                filename = filename[1:-1]
+                print(filename)
+            elif r.url != check:
+                print(r.url)
+                
     response.close()
 
     #urllib.request.urlretrieve("http://www.andyvuong.me/resources/avresume.pdf", dest_directory)
@@ -55,7 +68,7 @@ def getFiles(param_url, path):
 " @param array_data - An array of string elements.
 " @return array_valid_data - A string array of valid urls.
 """
-def getValidFiles(array_data):
+def get_valid_files(array_data):
     array_valid_data = []
     # Process array.
     for n in range(0, len(array_data)-1):
