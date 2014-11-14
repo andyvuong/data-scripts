@@ -38,7 +38,7 @@ def getFiles(param_url, path):
     # Process all links.
     for n in range(0, len(data_processed)-1):
         link = data_processed[n]
-        
+        # Need to catch exceptions
         check = urllib.request.Request(data_processed[n])
         r = urllib.request.urlopen(check)
 
@@ -65,8 +65,8 @@ def download_file(link, link_header, dest):
     else:
         name = basename(urlsplit(link)[2])
     directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), dest)
-    final_dest = os.path.join("/test/", name)
-    print(final_dest)
+    final_dest = os.path.join(directory, name)
+    print("Downloaded File: " + name)
     # Download
     urllib.request.urlretrieve(link, final_dest)
     
