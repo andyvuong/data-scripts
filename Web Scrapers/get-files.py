@@ -19,38 +19,65 @@ import requests, urllib.request, urllib.parse, sys, re, os
 " @param path - The path to store downloaded files.
 """
 def getFiles(param_url, path):
-    # Make an HTTP request to the given URL.
-    response = urllib.request.urlopen(param_url)
-    # Extract and print response meta-data.
-    header = response.info()
-    # Print the response to console.
-    print("URL:",response.geturl())
-    print("Status:", response.getcode())
-    print(header)
-    # Extract content.
-    data = response.read()
-    data_tree = etree.HTML(data)
-    # Extract all the anchors.
-    data_tree_links = data_tree.xpath('//a/@href')
-    # Process all elements.
-    data_processed = get_valid_files(data_tree_links)
+    num_processed = 0
+    num_downloads = 0
+    num_failures = 0
+    
+    try:
+        print("Making a request to server...")
+        urllib.request.urlopen(param_url)
+    except urlliab.error.HTTPError as e:
+        print("Error: " + str(e.code))
+        print(e.read())
+    else:
+        print("Success! Returning the header information: \n")
+        # Make an HTTP request to the given URL.
+        response = urllib.request.urlopen(param_url)
+        # Extract and print response meta-data.
+        header = response.info()
+        # Print the response to console.
+        print("URL:",response.geturl())
+        print("Status:", response.getcode())
+        print(header)
+        # Extract content.
+        data = response.read()
+        data_tree = etree.HTML(data)
+        # Extract all the anchors.
+        data_tree_links = data_tree.xpath('//a/@href')
+        # Process all elements.
+        data_processed = get_valid_files(data_tree_links)
+        print("Extracted valid urls")
+        # Process all links.
+        print("Processing...")
+        for n in range(0, len(data_processed)-1):
+            link = data_processed[n]
+            check = urllib.request.Request(data_processed[n])
+            try:
+                urllib.request.urlopen(check)
+            except urllib.error.HTTPError as e:
+                print("Error: " + str(e.code))
+                print(e.read())
+                print("Continuing...")
+                num_failures += 1
+            else:   
+                r = urllib.request.urlopen(check)
+                link_header = r.info()
+                # Check for content-type in the header
+                if 'Content-Type' in link_header:
+                    link_filetype = link_header.get_content_subtype() #email.message.Message
+                    if should_download(link_filetype) == True:
+                        download_file(link, link_header, path)
+                        num_downloads += 1
+                r.close()
+            num_processed += 1
 
-    # Process all links.
-    for n in range(0, len(data_processed)-1):
-        link = data_processed[n]
-        # Need to catch exceptions
-        check = urllib.request.Request(data_processed[n])
-        r = urllib.request.urlopen(check)
+        # Return:
+        print("\n\n####PROCESS FINISHED####")
+        print("Processed valid links: " + str(num_processed))
+        print("Number of downloads: " + str(num_downloads))
+        print("Number of failures: " + str(num_failures))
 
-        link_header = r.info()
-        # Check for content-type in the header
-        if 'Content-Type' in link_header:
-            link_filetype = link_header.get_content_subtype() #email.message.Message
-            if should_download(link_filetype) == True:
-                download_file(link, link_header, path)
-        r.close()
-                
-    response.close()
+        response.close()
 
 """
 " @param link - Where the file is coming from.
@@ -64,7 +91,12 @@ def download_file(link, link_header, dest):
         name = link_header.get_filename()
     else:
         name = basename(urlsplit(link)[2])
+
     directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), dest)
+    if os.path.exists(directory) is False:
+        os.mkdir(directory, 0o777)
+    
+    # Create the specified path if necessary
     final_dest = os.path.join(directory, name)
     print("Downloaded File: " + name)
     # Download
@@ -118,7 +150,6 @@ def is_valid_url(url):
 
 ######## Run Script ########
         
-#getFiles("https://wiki.cites.illinois.edu/wiki/display/cs233fa14/Assignments", "test")
-getFiles("https://courses.engr.illinois.edu/cs225/resources.htm", "test")
+getFiles("https://courses.engr.illinois.edu/cs225/resources.htm", "documents")
 
 
