@@ -65,10 +65,11 @@ def download_file(link, link_header, dest):
     else:
         name = basename(urlsplit(link)[2])
     directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), dest)
-    final_dest = os.path.join(directory, name)
+    final_dest = os.path.join("/test/", name)
     print(final_dest)
     # Download
-    urllib.request.urlretrieve(link, dest)
+    urllib.request.urlretrieve(link, final_dest)
+    
 
 """
 " @param content_type - content type of file
