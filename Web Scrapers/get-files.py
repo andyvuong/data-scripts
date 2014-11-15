@@ -33,25 +33,31 @@ def getFiles(param_url, path):
         print("Success! Returning the header information: \n")
         # Make an HTTP request to the given URL.
         response = urllib.request.urlopen(param_url)
+
         # Extract and print response meta-data.
         header = response.info()
+
         # Print the response to console.
         print("URL:",response.geturl())
         print("Status:", response.getcode())
         print(header)
+
         # Extract content.
         data = response.read()
         data_tree = etree.HTML(data)
+
         # Extract all the anchors.
         data_tree_links = data_tree.xpath('//a/@href')
+
         # Process all elements.
         data_processed = get_valid_files(data_tree_links)
         print("Extracted valid urls")
+        
         # Process all links.
         print("Processing...")
-        for n in range(0, len(data_processed)-1):
-            link = data_processed[n]
-            check = urllib.request.Request(data_processed[n])
+
+        for link in data_processed:
+            check = urllib.request.Request(link)
             try:
                 urllib.request.urlopen(check)
             except urllib.error.HTTPError as e:
@@ -65,7 +71,7 @@ def getFiles(param_url, path):
                 # Check for content-type in the header
                 if 'Content-Type' in link_header:
                     link_filetype = link_header.get_content_subtype() #email.message.Message
-                    if should_download(link_filetype) == True:
+                    if should_download(link_filetype) is True:
                         download_file(link, link_header, path)
                         num_downloads += 1
                 r.close()
@@ -121,11 +127,11 @@ def should_download(content_type):
 def get_valid_files(array_data):
     array_valid_data = []
     # Process array.
-    for n in range(0, len(array_data)-1):
-        link = is_valid_url(array_data[n])
+    for link in array_data:
+        valid_link = is_valid_url(link)
         # Link is valid.
-        if link is not None:
-            array_valid_data.append(link.group(0))
+        if valid_link is not None:
+            array_valid_data.append(valid_link.group(0))
     # Return array of valid links to try.
     return array_valid_data
         
