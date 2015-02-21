@@ -17,14 +17,14 @@ def filter_posts(filepath):
             os.remove("data_1/" + str(file))
 
 def deeper_filter(filepath):
-    url_l = "http://estetica-design-forum.com/showthread.php?"
+    url_l = "url/id=X?"
     for file in os.listdir(filepath):
         s = file.find('_')        
         e = file.find('.')
         k = file[s+1:e]
         url_f = url_l + k
         #print(url_f)
-        f = open('avuong3_txt/avuong3_' + k + ".txt", 'wb')
+        f = open('path' + k + ".txt", 'wb')
         f.write(url_f + '\n')
 
         file_dat = open("data_1/" + str(file), 'r').read()
